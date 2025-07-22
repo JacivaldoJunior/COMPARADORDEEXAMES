@@ -98,7 +98,7 @@
           dadosA = dados;
           alert("PDF convertido com sucesso e carregado como Planilha A!");
 
-          // Gerar arquivo Excel
+          // Gerar e baixar Excel automaticamente
           const worksheet = XLSX.utils.json_to_sheet(dados);
           const workbook = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(workbook, worksheet, "Planilha Apoio PDF");
@@ -106,10 +106,16 @@
 
           const url = URL.createObjectURL(blob);
           const link = document.getElementById("downloadExcelApoio");
-link.href = url;
-link.style.display = "inline-block";
-link.classList.remove("hidden");
-link.onclick = () => setTimeout(() => URL.revokeObjectURL(url), 1000);
+          link.href = url;
+          link.classList.remove("hidden");
+          link.classList.add("block");
+          link.style.display = "block";
+
+          // Baixar automaticamente
+          setTimeout(() => {
+            link.click();
+            URL.revokeObjectURL(url);
+          }, 500);
         }
       };
       reader.readAsArrayBuffer(file);
