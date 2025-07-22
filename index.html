@@ -105,17 +105,22 @@
           const blob = XLSX.write(workbook, { bookType: "xlsx", type: "blob" });
 
           const url = URL.createObjectURL(blob);
+
+          // Criar link temporário para download automático
+          const tempLink = document.createElement("a");
+          tempLink.href = url;
+          tempLink.download = "planilha_apoio_convertida.xlsx";
+          document.body.appendChild(tempLink);
+          tempLink.click();
+          document.body.removeChild(tempLink);
+          URL.revokeObjectURL(url);
+
+          // Mostrar link de download também
           const link = document.getElementById("downloadExcelApoio");
           link.href = url;
           link.classList.remove("hidden");
           link.classList.add("block");
           link.style.display = "block";
-
-          // Baixar automaticamente
-          setTimeout(() => {
-            link.click();
-            URL.revokeObjectURL(url);
-          }, 500);
         }
       };
       reader.readAsArrayBuffer(file);
