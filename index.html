@@ -29,12 +29,18 @@
       </div>
     </div>
 
-    <!-- Botão para converter PDF -->
+    <!-- Converter PDF -->
     <div class="mb-8">
       <label class="block font-semibold mb-2">📄 Converter PDF para Excel (Apoio):</label>
       <input type="file" id="pdfInput" class="w-full border rounded p-2 mb-2" accept="application/pdf" />
-      <button onclick="converterPdfParaExcel()" class="bg-indigo-600 text-white p-3 rounded font-semibold hover:bg-indigo-700">Converter PDF</button>
-      <a id="downloadExcelApoio" href="#" download="planilha_apoio_convertida.xlsx" class="hidden mt-2 inline-block text-blue-600 underline">Baixar Excel Convertido</a>
+      <button id="convertBtn" onclick="converterPdfParaExcel()" class="bg-indigo-600 text-white p-3 rounded font-semibold hover:bg-indigo-700 flex items-center gap-2">
+        <span>Converter PDF</span>
+        <span id="spinner" class="hidden animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5"></span>
+      </button>
+      <div id="successMessage" class="hidden text-green-700 font-semibold mt-4 flex items-center gap-2">
+        ✅ PDF convertido com sucesso! Clique no botão abaixo para baixar o Excel.
+      </div>
+      <a id="downloadExcelApoio" href="#" download="planilha_apoio_convertida.xlsx" class="hidden mt-2 inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">📥 Baixar Excel Convertido</a>
     </div>
 
     <!-- Botões -->
@@ -61,12 +67,19 @@
     function converterPdfParaExcel() {
       const fileInput = document.getElementById('pdfInput');
       const file = fileInput.files[0];
+      const spinner = document.getElementById('spinner');
+      const convertBtn = document.getElementById('convertBtn');
+      const successMessage = document.getElementById('successMessage');
+      const downloadLink = document.getElementById('downloadExcelApoio');
+
       if (!file) return alert("Selecione um PDF.");
+
+      // Mostrar spinner
+      spinner.classList.remove("hidden");
 
       const reader = new FileReader();
       reader.onload = async function () {
         const typedarray = new Uint8Array(reader.result);
-
         const loadingTask = pdfjsLib.getDocument({ data: typedarray });
         const pdf = await loadingTask.promise;
 
@@ -92,11 +105,12 @@
           }
         });
 
+        spinner.classList.add("hidden");
+
         if (dados.length === 0) {
           alert("Não foi possível extrair dados válidos do PDF. Certifique-se de que ele tem formato de tabela com nome do exame e valor.");
         } else {
           dadosA = dados;
-          alert("PDF convertido com sucesso e carregado como Planilha A!");
 
           const worksheet = XLSX.utils.json_to_sheet(dados);
           const workbook = XLSX.utils.book_new();
@@ -104,25 +118,10 @@
           const blob = XLSX.write(workbook, { bookType: "xlsx", type: "blob" });
           const url = URL.createObjectURL(blob);
 
-          // Criar link temporário para download automático
-          const tempLink = document.createElement("a");
-          tempLink.href = url;
-          tempLink.download = "planilha_apoio_convertida.xlsx";
-          tempLink.style.display = "none";
-          document.body.appendChild(tempLink);
-          tempLink.click();
-
-          setTimeout(() => {
-            URL.revokeObjectURL(url);
-            document.body.removeChild(tempLink);
-          }, 2000);
-
-          // Mostrar botão de download manual também
-          const link = document.getElementById("downloadExcelApoio");
-          link.href = url;
-          link.classList.remove("hidden");
-          link.classList.add("block");
-          link.style.display = "block";
+          // Mostrar mensagem de sucesso e botão de download
+          downloadLink.href = url;
+          downloadLink.classList.remove("hidden");
+          successMessage.classList.remove("hidden");
         }
       };
       reader.readAsArrayBuffer(file);
