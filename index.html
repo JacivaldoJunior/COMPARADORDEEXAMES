@@ -7,7 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-6">
   <div class="max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-8">
@@ -27,13 +26,6 @@
         <label class="block font-semibold mb-2">Tabela Convênio:</label>
         <input type="file" id="fileConvenio" class="w-full border rounded p-2" />
       </div>
-    </div>
-
-    <!-- Botão para converter PDF -->
-    <div class="mb-8">
-      <input type="file" id="pdfInput" class="w-full border rounded p-2 mb-2" accept="application/pdf" />
-      <button onclick="converterPdfParaExcel()" class="bg-indigo-600 text-white p-3 rounded font-semibold hover:bg-indigo-700">Converter PDF</button>
-      <a id="downloadExcelApoio" href="#" download="planilha_apoio_convertida.xlsx" class="hidden mt-2 inline-block text-blue-600 underline">Baixar Excel Convertido</a>
     </div>
 
     <!-- Botões -->
@@ -57,63 +49,6 @@
   </div>
 
   <script>
-    function converterPdfParaExcel() {
-      const fileInput = document.getElementById('pdfInput');
-      const file = fileInput.files[0];
-      if (!file) return alert("Selecione um PDF.");
-
-      const reader = new FileReader();
-      reader.onload = async function () {
-        const typedarray = new Uint8Array(reader.result);
-
-        const loadingTask = pdfjsLib.getDocument({ data: typedarray });
-        const pdf = await loadingTask.promise;
-
-        let textContent = "";
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const content = await page.getTextContent();
-          const pageText = content.items.map((item) => item.str).join(" ");
-          textContent += pageText + "\n";
-        }
-
-        const linhas = textContent.split("\n").filter((l) => l.trim());
-        const dados = [];
-
-        linhas.forEach((linha) => {
-          const partes = linha.split(/\s{2,}|\t/);
-          if (partes.length >= 2) {
-            const exame = partes[0].trim();
-            const valor = parseFloat(partes[1].replace(/[^0-9,\.]/g, '').replace(',', '.'));
-            if (!isNaN(valor)) {
-              dados.push({ Exame: exame, Valor: valor });
-            }
-          }
-        });
-
-        if (dados.length === 0) {
-          alert("Não foi possível extrair dados válidos do PDF. Certifique-se de que ele tem formato de tabela com nome do exame e valor.");
-        } else {
-          dadosA = dados;
-          alert("PDF convertido com sucesso e carregado como Planilha A!");
-
-          // Gerar arquivo Excel
-          const worksheet = XLSX.utils.json_to_sheet(dados);
-          const workbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(workbook, worksheet, "Planilha Apoio PDF");
-          const blob = XLSX.write(workbook, { bookType: "xlsx", type: "blob" });
-
-          const url = URL.createObjectURL(blob);
-          const link = document.getElementById("downloadExcelApoio");
-link.href = url;
-link.style.display = "inline-block";
-link.classList.remove("hidden");
-link.onclick = () => setTimeout(() => URL.revokeObjectURL(url), 1000);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
     function toggleExportMenu() {
       const menu = document.getElementById("exportMenu");
       menu.classList.toggle("hidden");
@@ -141,6 +76,27 @@ link.onclick = () => setTimeout(() => URL.revokeObjectURL(url), 1000);
         x: 10,
         y: 10
       });
+    }
+
+    // Placeholder para funções que você já possui no seu sistema
+    function compararPlanilhas() {
+      alert("Função compararPlanilhas() deve ser implementada.");
+    }
+
+    function filtrarPrejuizo() {
+      alert("Função filtrarPrejuizo() deve ser implementada.");
+    }
+
+    function verLucro() {
+      alert("Função verLucro() deve ser implementada.");
+    }
+
+    function adicionarLucro() {
+      alert("Função adicionarLucro() deve ser implementada.");
+    }
+
+    function verNomesDiferentes() {
+      alert("Função verNomesDiferentes() deve ser implementada.");
     }
   </script>
 </body>
