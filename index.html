@@ -49,6 +49,142 @@
   </div>
 
   <script>
+    let dadosA = [], dadosB = [], dadosConvenio = [];
+
+    document.getElementById("fileA").addEventListener("change", (e) => {
+      lerArquivoExcel(e.target.files[0], (dados) => dadosA = dados);
+    });
+
+    document.getElementById("fileB").addEventListener("change", (e) => {
+      lerArquivoExcel(e.target.files[0], (dados) => dadosB = dados);
+    });
+
+    document.getElementById("fileConvenio").addEventListener("change", (e) => {
+      lerArquivoExcel(e.target.files[0], (dados) => dadosConvenio = dados);
+    });
+
+    function lerArquivoExcel(file, callback) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const primeiraPlanilha = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[primeiraPlanilha];
+        const json = XLSX.utils.sheet_to_json(worksheet);
+        callback(json);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function compararPlanilhas() {
+      if (!dadosA.length || !dadosB.length) return alert("Anexe os arquivos A e B.");
+
+      const resultado = [];
+      dadosA.forEach((itemA) => {
+        const correspondenteB = dadosB.find((itemB) => itemB.Exame?.toLowerCase().trim() === itemA.Exame?.toLowerCase().trim());
+        if (correspondenteB) {
+          resultado.push({
+            Exame: itemA.Exame,
+            ValorA: itemA.Valor,
+            ValorB: correspondenteB.Valor,
+            Diferença: (itemA.Valor - correspondenteB.Valor).toFixed(2)
+          });
+        }
+      });
+
+      mostrarTabela(resultado, ["Exame", "ValorA", "ValorB", "Diferença"]);
+    }
+
+    function filtrarPrejuizo() {
+      if (!dadosB.length || !dadosConvenio.length) return alert("Anexe os arquivos B e Convênio.");
+
+      const resultado = [];
+      dadosB.forEach((itemB) => {
+        const convenio = dadosConvenio.find((item) => item.Exame?.toLowerCase().trim() === itemB.Exame?.toLowerCase().trim());
+        if (convenio && convenio.Valor < itemB.Valor) {
+          resultado.push({
+            Exame: itemB.Exame,
+            ValorB: itemB.Valor,
+            ValorConvenio: convenio.Valor,
+            Prejuízo: (itemB.Valor - convenio.Valor).toFixed(2)
+          });
+        }
+      });
+
+      mostrarTabela(resultado, ["Exame", "ValorB", "ValorConvenio", "Prejuízo"]);
+    }
+
+    function verLucro() {
+      if (!dadosB.length || !dadosConvenio.length) return alert("Anexe os arquivos B e Convênio.");
+
+      const resultado = [];
+      dadosB.forEach((itemB) => {
+        const convenio = dadosConvenio.find((item) => item.Exame?.toLowerCase().trim() === itemB.Exame?.toLowerCase().trim());
+        if (convenio && convenio.Valor >= itemB.Valor) {
+          resultado.push({
+            Exame: itemB.Exame,
+            ValorB: itemB.Valor,
+            ValorConvenio: convenio.Valor,
+            Lucro: (convenio.Valor - itemB.Valor).toFixed(2)
+          });
+        }
+      });
+
+      mostrarTabela(resultado, ["Exame", "ValorB", "ValorConvenio", "Lucro"]);
+    }
+
+    function adicionarLucro() {
+      if (!dadosB.length) return alert("Anexe o arquivo B.");
+
+      const porcentagem = prompt("Digite a porcentagem de lucro a aplicar (ex: 20 para 20%):");
+      const lucro = parseFloat(porcentagem);
+      if (isNaN(lucro)) return alert("Porcentagem inválida.");
+
+      const resultado = dadosB.map((item) => ({
+        Exame: item.Exame,
+        ValorOriginal: item.Valor,
+        ValorComLucro: (item.Valor * (1 + lucro / 100)).toFixed(2)
+      }));
+
+      mostrarTabela(resultado, ["Exame", "ValorOriginal", "ValorComLucro"]);
+    }
+
+    function verNomesDiferentes() {
+      if (!dadosA.length || !dadosB.length) return alert("Anexe os arquivos A e B.");
+
+      const nomesA = dadosA.map(item => item.Exame?.toLowerCase().trim());
+      const nomesB = dadosB.map(item => item.Exame?.toLowerCase().trim());
+
+      const diferentes = nomesA.filter(nome => !nomesB.includes(nome)).map(nome => {
+        const item = dadosA.find(i => i.Exame?.toLowerCase().trim() === nome);
+        return { Exame: item?.Exame };
+      });
+
+      mostrarTabela(diferentes, ["Exame"]);
+    }
+
+    function mostrarTabela(dados, colunas) {
+      const resultadoDiv = document.getElementById("resultado");
+      if (!dados.length) return resultadoDiv.innerHTML = "<p class='text-center text-red-600'>Nenhum dado encontrado.</p>";
+
+      let html = "<table class='min-w-full table-auto border border-gray-300'><thead><tr>";
+      colunas.forEach(col => {
+        html += `<th class='border px-4 py-2 bg-gray-200'>${col}</th>`;
+      });
+      html += "</tr></thead><tbody>";
+
+      dados.forEach(linha => {
+        html += "<tr>";
+        colunas.forEach(col => {
+          html += `<td class='border px-4 py-1 text-center'>${linha[col]}</td>`;
+        });
+        html += "</tr>";
+      });
+
+      html += "</tbody></table>";
+      resultadoDiv.innerHTML = html;
+    }
+
     function toggleExportMenu() {
       const menu = document.getElementById("exportMenu");
       menu.classList.toggle("hidden");
@@ -76,27 +212,6 @@
         x: 10,
         y: 10
       });
-    }
-
-    // Placeholder para funções que você já possui no seu sistema
-    function compararPlanilhas() {
-      alert("Função compararPlanilhas() deve ser implementada.");
-    }
-
-    function filtrarPrejuizo() {
-      alert("Função filtrarPrejuizo() deve ser implementada.");
-    }
-
-    function verLucro() {
-      alert("Função verLucro() deve ser implementada.");
-    }
-
-    function adicionarLucro() {
-      alert("Função adicionarLucro() deve ser implementada.");
-    }
-
-    function verNomesDiferentes() {
-      alert("Função verNomesDiferentes() deve ser implementada.");
     }
   </script>
 </body>
